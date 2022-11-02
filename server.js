@@ -24,14 +24,11 @@ const connection = mySQL2.createConnection ({
                 'View All Employees By Department',
                 'View Department Budgets',
                 'Update Employee Role',
-                'Update Employee Manager',
                 'Add Employee',
                 'Add Role',
                 'Add Department',
                 'Remove Employee',
-                'Remove Role',
-                'Remove Department',
-                'Exit'
+                
                 ]
             }
           ])
@@ -63,9 +60,7 @@ const connection = mySQL2.createConnection ({
                   updateEmployeeRole();
               }
       
-              if (choices === 'Update Employee Manager') {
-                  updateEmployeeManager();
-              }
+             
       
               if (choices === 'View All Roles') {
                   viewAllRoles();
@@ -73,10 +68,6 @@ const connection = mySQL2.createConnection ({
       
               if (choices === 'Add Role') {
                   addRole();
-              }
-      
-              if (choices === 'Remove Role') {
-                  removeRole();
               }
       
               if (choices === 'Add Department') {
@@ -333,6 +324,111 @@ const addRole = () => {
           });
         });
   };
+  //Update an Employee's Role
+  const updateEmployeeRole = () => {
+      let sql =       `SELECT employee.id, employee.first_name, employee.last_name, role.id AS "role_id"
+                      FROM employee, role, department WHERE department.id = role.department_id AND role.id = employee.role_id`;
+      connection.promise().query(sql) 
+      .then((response) => {
+        let employeeNamesArray = [];
+        response[0].forEach((employee) => {employeeNamesArray.push(`${employee.first_name} ${employee.last_name}`);
+      });
+        
   
+        let sql =     `SELECT role.id, role.title FROM role`;
+        connection.promise().query(sql)
+        .then((response) => {
+          let rolesArray = [];
+          response[0].forEach((role) => {rolesArray.push(role.title);
+          });
+  
+          inquirer
+            .prompt([
+              {
+                name: 'chosenEmployee',
+                type: 'list',
+                message: 'Which employee has a new role?',
+                choices: employeeNamesArray
+              },
+              {
+                name: 'chosenRole',
+                type: 'list',
+                message: 'What is their new role?',
+                choices: rolesArray
+              }
+            ])
+            .then((answer) => {
+              let newTitleId, employeeId;
+  
+              response.forEach((role) => {
+                if (answer.chosenRole === role.title) {
+                  newTitleId = roles.id;
+                }
+              });
+  
+              response.forEach((employee) => {
+                if (
+                  answer.chosenEmployee ===
+                  `${employee.first_name} ${employee.last_name}`
+                ) {
+                  employeeId = employee.id;
+                }
+              });
+  
+              let sqls =    `UPDATE employee SET employee.role_id = ? WHERE employee.id = ?`;
+              connection.query(
+                sqls,
+                [newTitleId, employeeId],
+                (error) => {
+                  if (error) throw error;
+                 console.log(`Employee Role Updated`);
+                 promptUser();
+                }
+              );
+            });
+        });
+      });
+    
+    };
 
+    // Delete an Employee
+  const removeEmployee = () => {
+    let sql =     `SELECT employee.id, employee.first_name, employee.last_name FROM employee`;
+
+    connection.promise().query(sql)
+    .then((response) => {
+      let employeeNamesArray = [];
+      response[0].forEach((employee) => {employeeNamesArray.push(`${employee.first_name} ${employee.last_name}`);});
+
+      inquirer
+        .prompt([
+          {
+            name: 'chosenEmployee',
+
+            type: 'list',
+            message: 'Which employee would you like to remove?',
+            choices: employeeNamesArray
+          }
+        ])
+        .then((answer) => {
+          let employeeId;
+
+          response.forEach((employee) => {
+            if (
+              answer.chosenEmployee ===
+              `${employee.first_name} ${employee.last_name}`
+            ) {
+              employeeId = employee.id;
+            }
+          });
+
+          let sql = `DELETE FROM employee WHERE employee.id = ?`;
+          connection.query(sql, [employeeId], (error) => {
+            if (error) throw error;
+            console.log(`Employee Successfully Removed`);
+            viewAllEmployees();
+          });
+        });
+    });
+  };
   promptUser();

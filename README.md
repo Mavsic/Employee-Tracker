@@ -32,10 +32,12 @@ THEN I am prompted to select an employee to update and their new role and this i
 
 ## Mock-Up
 
-![]()
+![mock up ](./pic.png)
 
 ## Video
 
-[]()
+[video walskthrough](./video.webm)
 
 ## GitHub Link
+
+https://github.com/Mavsic/Employee-Tracker
